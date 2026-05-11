@@ -36,17 +36,7 @@ function jobActions(jobId: string, status: string, url?: string): ResponseAction
     navigate: { endpointId: 'status', params: { job_id: jobId } },
   });
 
-  if (status === 'queued' || status === 'processing') {
-    actions.push({
-      id: `cancel-${jobId}`,
-      label: 'Cancel',
-      icon: 'cancel',
-      variant: 'danger',
-      execute: { method: 'DELETE', path: `/jobs/${jobId}/cancel`, confirm: `Cancel job ${jobId.slice(0, 8)}...?` },
-    });
-  }
-
-  if (status === 'failed' || status === 'cancelled') {
+  if (status === 'failed') {
     actions.push({
       id: `retry-${jobId}`,
       label: 'Retry',
@@ -67,15 +57,13 @@ function jobActions(jobId: string, status: string, url?: string): ResponseAction
     });
   }
 
-  if (status === 'completed' || status === 'failed' || status === 'cancelled') {
-    actions.push({
-      id: `delete-${jobId}`,
-      label: 'Delete',
-      icon: 'delete',
-      variant: 'danger',
-      execute: { method: 'DELETE', path: `/jobs/${jobId}`, confirm: `Delete job ${jobId.slice(0, 8)}... and its file?` },
-    });
-  }
+  actions.push({
+    id: `delete-${jobId}`,
+    label: 'Delete',
+    icon: 'delete',
+    variant: 'danger',
+    execute: { method: 'DELETE', path: `/jobs/${jobId}`, confirm: `Delete job ${jobId.slice(0, 8)}... and its file?` },
+  });
 
   return actions;
 }
@@ -110,14 +98,6 @@ export function getResponseActions(endpointId: string, body: unknown, context?: 
           href: url,
         });
       }
-      actions.push({
-        id: `delete-${filename}`,
-        label: 'Delete',
-        icon: 'delete',
-        variant: 'danger',
-        execute: { method: 'DELETE', path: `/video/${filename}`, confirm: `Delete ${filename}?` },
-      });
-
       groups.push({ title: filename, subtitle: sizeMb, actions });
     }
     return groups;
@@ -150,17 +130,7 @@ export function getResponseActions(endpointId: string, body: unknown, context?: 
 
     const actions: ResponseAction[] = [];
 
-    if (jobId && (status === 'queued' || status === 'processing')) {
-      actions.push({
-        id: 'cancel-current',
-        label: 'Cancel',
-        icon: 'cancel',
-        variant: 'danger',
-        execute: { method: 'DELETE', path: `/jobs/${jobId}/cancel`, confirm: `Cancel job ${jobId.slice(0, 8)}...?` },
-      });
-    }
-
-    if (jobId && (status === 'failed' || status === 'cancelled')) {
+    if (jobId && status === 'failed') {
       actions.push({
         id: 'retry-current',
         label: 'Retry',
@@ -188,16 +158,6 @@ export function getResponseActions(endpointId: string, body: unknown, context?: 
       });
     }
 
-    if (filename && (status === 'completed' || status === 'failed')) {
-      actions.push({
-        id: 'delete-video',
-        label: 'Delete File',
-        icon: 'delete',
-        variant: 'danger',
-        execute: { method: 'DELETE', path: `/video/${filename}`, confirm: `Delete ${filename}?` },
-      });
-    }
-
     if (actions.length > 0) {
       groups.push({
         title: `Job ${status}`,
@@ -222,15 +182,6 @@ export function getResponseActions(endpointId: string, body: unknown, context?: 
         navigate: { endpointId: 'status', params: { job_id: jobId } },
       },
     ];
-    if (status === 'queued' || status === 'processing') {
-      actions.push({
-        id: `cancel-${jobId}`,
-        label: 'Cancel',
-        icon: 'cancel',
-        variant: 'danger',
-        execute: { method: 'DELETE', path: `/jobs/${jobId}/cancel`, confirm: `Cancel job?` },
-      });
-    }
     groups.push({ title: `Job submitted`, subtitle: jobId, status, actions });
     return groups;
   }

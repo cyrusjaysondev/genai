@@ -308,132 +308,150 @@ function App() {
           </div>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-5xl mx-auto p-5 space-y-5">
-            {/* Endpoint header */}
-            <div>
-              <h1 className="text-xl font-semibold text-slate-100">{endpoint.name}</h1>
-              <p className="text-sm text-slate-400 mt-1">{endpoint.description}</p>
-            </div>
-
-            {/* Parameters */}
-            {endpoint.params.length > 0 && (
+        {/* Split content area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* ─── LEFT PANEL: Form ─── */}
+          <div className="w-1/2 overflow-y-auto border-r border-slate-700/40">
+            <div className="p-5 space-y-5">
+              {/* Endpoint header */}
               <div>
-                <h2 className="text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">Parameters</h2>
-                <ParamForm
-                  params={endpoint.params}
-                  values={valuesWithDefaults}
-                  onChange={handleParamChange}
-                  onFileChange={handleFileChange}
-                />
+                <h1 className="text-xl font-semibold text-slate-100">{endpoint.name}</h1>
+                <p className="text-sm text-slate-400 mt-1">{endpoint.description}</p>
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleExecute}
-                disabled={!podId || executing}
-                className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
-              >
-                {executing ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                      <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                    </svg>
-                    Executing...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Send Request
-                  </>
+              {/* Parameters */}
+              {endpoint.params.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider">Parameters</h2>
+                  <ParamForm
+                    params={endpoint.params}
+                    values={valuesWithDefaults}
+                    onChange={handleParamChange}
+                    onFileChange={handleFileChange}
+                  />
+                </div>
+              )}
+
+              {/* Send button */}
+              <div className="flex items-center gap-3 pb-4">
+                <button
+                  onClick={handleExecute}
+                  disabled={!podId || executing}
+                  className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {executing ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                        <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
+                      </svg>
+                      Executing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Send Request
+                    </>
+                  )}
+                </button>
+                {!podId && (
+                  <span className="text-sm text-amber-400">Enter Pod ID above</span>
                 )}
-              </button>
-              {!podId && (
-                <span className="text-sm text-amber-400">Enter your Pod ID above to execute requests</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── RIGHT PANEL: Results ─── */}
+          <div className="w-1/2 overflow-y-auto">
+            <div className="p-5 space-y-4">
+              {/* Tabs: Curl / Response */}
+              <div className="border-b border-slate-700">
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setActiveTab('curl')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'curl'
+                        ? 'border-sky-400 text-sky-400'
+                        : 'border-transparent text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    cURL Command
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('response')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                      activeTab === 'response'
+                        ? 'border-sky-400 text-sky-400'
+                        : 'border-transparent text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    Response
+                    {response && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        response.status >= 200 && response.status < 300 ? 'bg-emerald-500/20 text-emerald-400' :
+                        response.status >= 400 ? 'bg-red-500/20 text-red-400' :
+                        'bg-slate-600 text-slate-300'
+                      }`}>
+                        {response.status || 'ERR'}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Tab content */}
+              {activeTab === 'curl' && (
+                <CurlDisplay curl={curl} onCopy={handleCopy} copied={copied} />
+              )}
+
+              {activeTab === 'response' && (
+                <div className="space-y-4">
+                  <ResponseActions
+                    endpointId={selectedId}
+                    response={response}
+                    podId={podId}
+                    context={Object.fromEntries(
+                      Object.entries(valuesWithDefaults).filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, v as string])
+                    )}
+                    onNavigate={handleNavigateToEndpoint}
+                    onRefresh={handleRefresh}
+                  />
+                  <ResponseViewer response={response} loading={responseLoading} />
+                </div>
+              )}
+
+              {/* Job Polling */}
+              {jobId && !jobResult && (
+                <JobPoller
+                  podId={podId}
+                  jobId={jobId}
+                  onComplete={handleJobComplete}
+                  onCancel={handleJobCancel}
+                />
+              )}
+
+              {/* Result Display */}
+              {jobResult && (
+                <ResultDisplay
+                  result={jobResult}
+                  baseUrl={baseUrl}
+                  outputType={endpoint.outputType || 'json'}
+                />
+              )}
+
+              {/* Empty state */}
+              {!response && !jobId && !jobResult && activeTab === 'response' && (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                  <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <p className="text-sm">Send a request to see the response here</p>
+                </div>
               )}
             </div>
-
-            {/* Tabs: Curl / Response */}
-            <div className="border-b border-slate-700">
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setActiveTab('curl')}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === 'curl'
-                      ? 'border-sky-400 text-sky-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-300'
-                  }`}
-                >
-                  cURL Command
-                </button>
-                <button
-                  onClick={() => setActiveTab('response')}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                    activeTab === 'response'
-                      ? 'border-sky-400 text-sky-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-300'
-                  }`}
-                >
-                  Response
-                  {response && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      response.status >= 200 && response.status < 300 ? 'bg-emerald-500/20 text-emerald-400' :
-                      response.status >= 400 ? 'bg-red-500/20 text-red-400' :
-                      'bg-slate-600 text-slate-300'
-                    }`}>
-                      {response.status || 'ERR'}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Tab content */}
-            {activeTab === 'curl' && (
-              <CurlDisplay curl={curl} onCopy={handleCopy} copied={copied} />
-            )}
-
-            {activeTab === 'response' && (
-              <div className="space-y-4">
-                <ResponseActions
-                  endpointId={selectedId}
-                  response={response}
-                  podId={podId}
-                  context={Object.fromEntries(
-                    Object.entries(valuesWithDefaults).filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, v as string])
-                  )}
-                  onNavigate={handleNavigateToEndpoint}
-                  onRefresh={handleRefresh}
-                />
-                <ResponseViewer response={response} loading={responseLoading} />
-              </div>
-            )}
-
-            {/* Job Polling */}
-            {jobId && !jobResult && (
-              <JobPoller
-                podId={podId}
-                jobId={jobId}
-                onComplete={handleJobComplete}
-                onCancel={handleJobCancel}
-              />
-            )}
-
-            {/* Result Display */}
-            {jobResult && (
-              <ResultDisplay
-                result={jobResult}
-                baseUrl={baseUrl}
-                outputType={endpoint.outputType || 'json'}
-              />
-            )}
           </div>
         </div>
       </div>

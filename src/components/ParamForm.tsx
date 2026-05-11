@@ -382,89 +382,47 @@ interface ResolutionTier {
   ratios: { ratio: string; width: number; height: number }[];
 }
 
-const LTX_TIERS: ResolutionTier[] = [
+const FLUX_T2I_TIERS: ResolutionTier[] = [
   {
-    label: 'SD', tag: '480p',
+    label: 'SD', tag: '512px',
     ratios: [
-      { ratio: '9:16', width: 272, height: 480 },
-      { ratio: '16:9', width: 480, height: 272 },
-      { ratio: '1:1',  width: 384, height: 384 },
+      { ratio: '1:1',  width: 512,  height: 512 },
+      { ratio: '9:16', width: 384,  height: 680 },
+      { ratio: '16:9', width: 680,  height: 384 },
+      { ratio: '3:4',  width: 448,  height: 600 },
+      { ratio: '4:3',  width: 600,  height: 448 },
     ],
   },
   {
-    label: 'HD', tag: '720p',
+    label: 'HD', tag: '1024px',
     ratios: [
-      { ratio: '9:16', width: 408, height: 720 },
-      { ratio: '16:9', width: 720, height: 408 },
-      { ratio: '1:1',  width: 544, height: 544 },
-    ],
-  },
-  {
-    label: 'Full HD', tag: '1080p',
-    ratios: [
-      { ratio: '9:16', width: 544, height: 960 },
-      { ratio: '16:9', width: 960, height: 544 },
-      { ratio: '1:1',  width: 720, height: 720 },
-    ],
-  },
-];
-
-const WAN_VIDEO_TIERS: ResolutionTier[] = [
-  {
-    label: 'SD', tag: '480p',
-    ratios: [
-      { ratio: '9:16', width: 480, height: 848 },
-      { ratio: '16:9', width: 848, height: 480 },
-      { ratio: '1:1',  width: 640, height: 640 },
-      { ratio: '4:3',  width: 736, height: 544 },
-    ],
-  },
-  {
-    label: 'HD', tag: '720p',
-    ratios: [
-      { ratio: '9:16', width: 704, height: 1280 },
-      { ratio: '16:9', width: 1280, height: 704 },
-      { ratio: '1:1',  width: 832, height: 832 },
-      { ratio: '4:3',  width: 960, height: 720 },
-    ],
-  },
-];
-
-const WAN_IMAGE_TIERS: ResolutionTier[] = [
-  {
-    label: 'SD', tag: '480p',
-    ratios: [
-      { ratio: '9:16', width: 480, height: 848 },
-      { ratio: '16:9', width: 848, height: 480 },
-      { ratio: '1:1',  width: 640, height: 640 },
-      { ratio: '3:4',  width: 576, height: 768 },
-    ],
-  },
-  {
-    label: 'HD', tag: '720p',
-    ratios: [
-      { ratio: '9:16', width: 704, height: 1280 },
-      { ratio: '16:9', width: 1280, height: 704 },
-      { ratio: '1:1',  width: 832, height: 832 },
-      { ratio: '3:4',  width: 768, height: 1024 },
-    ],
-  },
-  {
-    label: 'Full HD', tag: '1080p',
-    ratios: [
-      { ratio: '9:16', width: 768, height: 1344 },
-      { ratio: '16:9', width: 1344, height: 768 },
       { ratio: '1:1',  width: 1024, height: 1024 },
-      { ratio: '3:4',  width: 896, height: 1152 },
+      { ratio: '9:16', width: 768,  height: 1360 },
+      { ratio: '16:9', width: 1360, height: 768 },
+      { ratio: '3:4',  width: 896,  height: 1192 },
+      { ratio: '4:3',  width: 1192, height: 896 },
+      { ratio: '2:3',  width: 832,  height: 1248 },
+      { ratio: '3:2',  width: 1248, height: 832 },
+    ],
+  },
+  {
+    label: 'Full HD', tag: '1080p',
+    ratios: [
+      { ratio: '1:1',  width: 1080, height: 1080 },
+      { ratio: '9:16', width: 608,  height: 1080 },
+      { ratio: '16:9', width: 1920, height: 1080 },
+      { ratio: '3:4',  width: 936,  height: 1248 },
+      { ratio: '4:3',  width: 1248, height: 936 },
     ],
   },
   {
     label: '2K', tag: '1440p',
     ratios: [
-      { ratio: '9:16', width: 896, height: 1600 },
-      { ratio: '16:9', width: 1600, height: 896 },
-      { ratio: '1:1',  width: 1152, height: 1152 },
-      { ratio: '3:4',  width: 1024, height: 1344 },
+      { ratio: '1:1',  width: 1440, height: 1440 },
+      { ratio: '9:16', width: 810,  height: 1440 },
+      { ratio: '16:9', width: 2048, height: 1152 },
+      { ratio: '3:4',  width: 1248, height: 1664 },
+      { ratio: '4:3',  width: 1664, height: 1248 },
     ],
   },
 ];
@@ -474,15 +432,10 @@ type PresetConfig = { tiers: ResolutionTier[] } | null;
 function getPresetsForParams(params: Param[]): PresetConfig {
   const hasWidth = params.some(p => p.name === 'width');
   const hasHeight = params.some(p => p.name === 'height');
-  if (!hasWidth || !hasHeight) return null;
-
-  const widthParam = params.find(p => p.name === 'width')!;
-
-  if (widthParam.step === 8) return { tiers: LTX_TIERS };
-
-  const hasSeconds = params.some(p => p.name === 'seconds');
-  if (!hasSeconds) return { tiers: WAN_IMAGE_TIERS };
-  return { tiers: WAN_VIDEO_TIERS };
+  const hasAspectRatioSelect = params.some(p => p.name === 'aspect_ratio');
+  // Don't show resolution presets if the endpoint uses aspect_ratio select instead
+  if (!hasWidth || !hasHeight || hasAspectRatioSelect) return null;
+  return { tiers: FLUX_T2I_TIERS };
 }
 
 function ResolutionSelector({
@@ -602,12 +555,126 @@ function ResolutionSelector({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Visual Aspect Ratio Picker (for face-swap aspect_ratio param)      */
+/* ------------------------------------------------------------------ */
+
+const ASPECT_RATIOS: { value: string; label: string; w: number; h: number }[] = [
+  { value: 'original', label: 'Original', w: 16, h: 16 },
+  { value: '1:1',  label: '1:1',   w: 16, h: 16 },
+  { value: '4:3',  label: '4:3',   w: 20, h: 15 },
+  { value: '3:4',  label: '3:4',   w: 15, h: 20 },
+  { value: '16:9', label: '16:9',  w: 22, h: 12 },
+  { value: '9:16', label: '9:16',  w: 12, h: 22 },
+  { value: '3:2',  label: '3:2',   w: 21, h: 14 },
+  { value: '2:3',  label: '2:3',   w: 14, h: 21 },
+  { value: '21:9', label: '21:9',  w: 24, h: 10 },
+  { value: '9:21', label: '9:21',  w: 10, h: 24 },
+];
+
+function AspectRatioVisualPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (name: string, value: string) => void;
+}) {
+  const current = (value as string) || 'original';
+  return (
+    <div className="space-y-1.5">
+      <label className={labelBase}>Aspect Ratio</label>
+      <div className="flex flex-wrap gap-2">
+        {ASPECT_RATIOS.map((ar) => {
+          const isActive = current === ar.value;
+          return (
+            <button
+              key={ar.value}
+              type="button"
+              onClick={() => onChange('aspect_ratio', ar.value)}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+                border transition-all duration-150 cursor-pointer
+                ${isActive
+                  ? 'border-sky-400 bg-sky-500/15 text-sky-300'
+                  : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                }
+              `}
+            >
+              <span
+                className={`block rounded-sm border-2 ${isActive ? 'border-sky-400' : 'border-slate-500'}`}
+                style={{ width: ar.w, height: ar.h }}
+              />
+              <span>{ar.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-xs text-slate-500">Choose output aspect ratio for the swapped image</p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Megapixel Visual Picker                                           */
+/* ------------------------------------------------------------------ */
+
+const MEGAPIXEL_OPTIONS = [
+  { value: 0.5, label: '0.5 MP', tag: 'Fast' },
+  { value: 1.0, label: '1 MP', tag: 'SD' },
+  { value: 2.0, label: '2 MP', tag: 'HD' },
+  { value: 3.0, label: '3 MP', tag: '2K' },
+  { value: 4.0, label: '4 MP', tag: '4K' },
+];
+
+function MegapixelPicker({
+  value,
+  onChange,
+}: {
+  value: unknown;
+  onChange: (name: string, value: number) => void;
+}) {
+  const current = Number(value) || 2.0;
+  return (
+    <div className="space-y-1.5">
+      <label className={labelBase}>Resolution</label>
+      <div className="flex flex-wrap gap-2">
+        {MEGAPIXEL_OPTIONS.map((mp) => {
+          const isActive = current === mp.value;
+          return (
+            <button
+              key={mp.value}
+              type="button"
+              onClick={() => onChange('megapixels', mp.value)}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
+                border transition-all duration-150 cursor-pointer
+                ${isActive
+                  ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
+                  : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                }
+              `}
+            >
+              <span className="flex flex-col items-start leading-tight">
+                <span>{mp.label}</span>
+                <span className="text-[10px] opacity-60">{mp.tag}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-xs text-slate-500">Higher = more detail but slower</p>
+    </div>
+  );
+}
+
 export default function ParamForm({
   params,
   values,
   onChange,
   onFileChange,
 }: ParamFormProps) {
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
   if (params.length === 0) {
     return (
       <p className="py-6 text-center text-sm italic text-slate-500">
@@ -617,8 +684,16 @@ export default function ParamForm({
   }
 
   const required = params.filter((p) => p.required);
-  const optional = params.filter((p) => !p.required);
+  const optional = params.filter((p) => !p.required && !p.advanced);
+  const advanced = params.filter((p) => p.advanced);
   const presetConfig = getPresetsForParams(params);
+
+  // Check if this endpoint has aspect_ratio + megapixels (face-swap style)
+  const hasAspectRatio = params.some(p => p.name === 'aspect_ratio');
+  const hasMegapixels = params.some(p => p.name === 'megapixels');
+  const visualPickerParams = new Set<string>();
+  if (hasAspectRatio) visualPickerParams.add('aspect_ratio');
+  if (hasMegapixels) visualPickerParams.add('megapixels');
 
   const renderField = (param: Param) => {
     const val = values[param.name];
@@ -738,7 +813,7 @@ export default function ParamForm({
         </div>
       )}
 
-      {/* Resolution + Aspect ratio presets */}
+      {/* Resolution + Aspect ratio presets (for t2i width/height) */}
       {presetConfig && (
         <ResolutionSelector
           tiers={presetConfig.tiers}
@@ -748,9 +823,56 @@ export default function ParamForm({
         />
       )}
 
-      {/* Optional params */}
+      {/* Visual aspect ratio picker (for face-swap) */}
+      {hasAspectRatio && (
+        <AspectRatioVisualPicker
+          value={values.aspect_ratio as string}
+          onChange={onChange}
+        />
+      )}
+
+      {/* Visual megapixel picker (for face-swap) */}
+      {hasMegapixels && (
+        <MegapixelPicker
+          value={values.megapixels}
+          onChange={onChange}
+        />
+      )}
+
+      {/* Optional params (excluding visual picker params) */}
       {optional.length > 0 && (
-        <div className="space-y-4">{optional.map(renderField)}</div>
+        <div className="space-y-4">
+          {optional.filter(p => !visualPickerParams.has(p.name)).map(renderField)}
+        </div>
+      )}
+
+      {/* Advanced params — collapsible */}
+      {advanced.length > 0 && (
+        <div className="border border-slate-700/40 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen(!advancedOpen)}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-400 hover:bg-slate-800/40 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <svg
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${advancedOpen ? 'rotate-90' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Advanced Settings
+            </span>
+            <span className="text-[10px] font-normal normal-case tracking-normal text-slate-600">
+              {advanced.length} {advanced.length === 1 ? 'param' : 'params'}
+            </span>
+          </button>
+          {advancedOpen && (
+            <div className="px-4 pb-4 pt-2 space-y-4 border-t border-slate-700/30">
+              {advanced.map(renderField)}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

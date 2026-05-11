@@ -335,6 +335,7 @@ function SingleLayout({
               podId={podId}
               onNavigate={onNavigate}
               onRefresh={onRefresh}
+              onPreview={onPreview}
             />
           ))}
         </div>
